@@ -36,12 +36,33 @@ public:
 };
 
 template<typename T>
+inline T MyQueue<T>::pop_back()
+{
+	if (not_empty != 0)
+	{
+		T tmp;
+		tmp = arr[iPop];
+		/*delete arr[iPop]; по идее это вообще не надо*/
+
+		if (iPop + 1 <= capacity)
+		{
+			iPop++;
+		}
+		else
+		{
+			iPop == 0; //не уверен в этой строчке
+		}
+		return tmp;
+	}
+}
+
+template<typename T>
 inline void MyQueue<T>::push_back(const T & myvalueTopush)
 {
 	if (capacity == not_empty)
 	{
 		T * newarr = new T[capacity + 1];
-		for (int i = 0; i < capacity; i++)
+		for (size_t i = 0; i < capacity; i++)
 		{
 			newarr[i] = std::move(arr[iPop]);
 			++iPop;
@@ -58,7 +79,7 @@ inline void MyQueue<T>::push_back(const T & myvalueTopush)
 		iPop = 0; //подумать
 		iPush = capacity - 1; //тоже подумать
 	}
-	
+
 	arr[iPush++] = myvalueTopush;
 	not_empty++;
 	if (iPush == capacity)
