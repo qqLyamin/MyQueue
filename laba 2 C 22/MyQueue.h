@@ -1,21 +1,4 @@
 #pragma once
-//template <typename T>
-//class MyQueue
-//{
-//	size_t queueNumber = 1;
-//	size_t FreeSpace = 10;
-//	size_t SIZE = 10;
-//	T * arr = new T[SIZE];
-//public:
-//
-//	T pop_back();
-//
-//	void push_back(T & myvalueTopush);
-//	void push_back(T && myvalueTopush);
-//
-//	MyQueue();
-//	~MyQueue();
-//};
 template <typename T>
 class MyQueue
 {
@@ -30,8 +13,17 @@ public:
 
 	T pop_back();
 
-	void push_back(const T & myvalueTopush);
-	void push_back(T && myvalueTopush);
+	template <typename T2>
+	void push_back(T2 &&);
+
+	MyQueue<T> & operator=(const MyQueue<T> & rightQ); //помогите применить forwarding
+
+	MyQueue(const MyQueue<T> & rightQ);
+
+
+	~MyQueue();
+	/*void push_back(const T & myvalueTopush);
+	void push_back(T && myvalueTopush);*/
 
 };
 
@@ -40,11 +32,8 @@ inline T MyQueue<T>::pop_back()
 {
 	if (not_empty != 0)
 	{
-		T tmp;
-		tmp = arr[iPop];
-		/*delete arr[iPop]; по идее это вообще не надо*/
-
-		if (iPop + 1 <= capacity)
+		T tmp = arr[iPop];
+		if (iPop + 1 < capacity)
 		{
 			iPop++;
 		}
@@ -52,46 +41,78 @@ inline T MyQueue<T>::pop_back()
 		{
 			iPop == 0; //не уверен в этой строчке
 		}
+		not_empty--;
 		return tmp;
 	}
 }
 
-template<typename T>
-inline void MyQueue<T>::push_back(const T & myvalueTopush)
+template<typename T> //помогите применить forwarding
+inline MyQueue<T> &  MyQueue<T>::operator=(const MyQueue<T> & rightQ)
 {
-	if (capacity == not_empty)
+	if (this != rightQ) // проверить на одинаковость +
 	{
-		T * newarr = new T[capacity + 1];
-		for (size_t i = 0; i < capacity; i++)
+		if (this->capacity < rightQ.not_empty)// проверить хватает ли своей емкости +
 		{
-			newarr[i] = std::move(arr[iPop]);
-			++iPop;
-			if (iPop == capacity)
+			capacity = rightQ.not_empty;
+			T * newarr = new T[capacity];
+			delete[] arr;
+			arr = newarr;
+		}
+		for (int i = 0; i < rightQ.not_empty; i++)
+		{
+			this->arr[i] = rightQ.arr[right.iPop];
+			rightQ.iPop++;
+			if (rightQ.iPop == rightQ.capacity)
 			{
-				iPop = 0;
+				rightQ.iPop = 0;
 			}
 		}
-		delete[] arr;
-		arr = newarr;
-
-		capacity++;
-
-		iPop = 0; //подумать
-		iPush = capacity - 1; //тоже подумать
+		iPop = 0;
+		iPush = not_empty;
+		not_empty = rightQ.not_empty;
 	}
-
-	arr[iPush++] = myvalueTopush;
-	not_empty++;
-	if (iPush == capacity)
-	{
-		iPush = 0;
-	}
+	return *this;
 }
 
+//новое с вопросами
+template<typename T>
+inline MyQueue<T>::MyQueue(const MyQueue<T>& rightQ)
+{
+	if (rightQ.not_empty > this->capacity) //это в случае если нам хватает места
+	{
+		T * newarr = new T[rightQ.not_empty];
+		delete[] this->arr;
+		this->arr = newarr;
+		this->capacity = rightQ.not_empty;
+	}
+
+	for (int i = 0; i < rightQ.not_empty; i++) //это мы делаем и в случае если памяти хватило и если не хватило
+	{
+		this->arr[i] = rightQ.arr[iPop];
+		++iPop;
+
+		if (iPop == rightQ.capacity)
+		{
+			rightQ.iPop = 0;
+		}
+	}
+	this->iPop = 0;
+	this->iPush = rightQ.not_empty - 1;
+	this->not_empty = rightQ.not_empty;
+	//this->capacity остается таким же в случае если нам памяти хватило
+}
 
 template<typename T>
-inline void MyQueue<T>::push_back(T && myvalueTopush)
+inline MyQueue<T>::~MyQueue()
 {
+	delete[] arr;
+}
+
+template<typename T> //это надо разобрать на бумаге, я не понял как это применять
+template<typename T2>
+inline void MyQueue<T>::push_back(T2 && myvalueTopush)
+{
+
 	if (capacity == not_empty)
 	{
 		T * newarr = new T[capacity + 1];
@@ -110,13 +131,16 @@ inline void MyQueue<T>::push_back(T && myvalueTopush)
 		capacity++;
 
 		iPop = 0; //подумать
-		iPush = capacity - 1; //тоже подумать
+		iPush = capacity - 1; //тоже подумать 
 	}
 
-	arr[iPush++] = std::move(myvalueTopush);
+
+	arr[iPush++] = std::forward<T2>(myvalueTopush);
+
 	not_empty++;
 	if (iPush == capacity)
 	{
 		iPush = 0;
 	}
 }
+
